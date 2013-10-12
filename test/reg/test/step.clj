@@ -72,33 +72,10 @@
          (reg.step/split-points [-1 1] [[0.1 -0.9] [3.01 3]])))
   )
 
-(deftest is-misclassified-test
-  (is (= true (reg.step/is-misclassified [0 0 0] [1 [3.01 3]])))
-  (is (= true (reg.step/is-misclassified [0 0 0] [-1 [3.01 3]])))
-  (is (= true (reg.step/is-misclassified [1 0.5 1.23] [-1 [3.01 3]])))
-  (is (= false (reg.step/is-misclassified [1 0.5 1.23] [1 [3.01 3]])))
-  )
-
 (deftest calc-one-y2-test
   (is (= 1 (reg.step/calc-one-y2 [1 0.21 0.33] [-1 0])))
   (is (= 1 (reg.step/calc-one-y2 [1 0.25 0.25] [-1 -3])))
   (is (= -1 (reg.step/calc-one-y2 [1 0.21 0.33] [-1 -3])))
-  )
-
-(deftest get-misclassified-test
-  (is (= [-1 [0.1 -0.9]] (reg.step/get-misclassified [1 0.21 1.13]
-                                                     [-1 1]
-                                                     [[0.1 -0.9] [3.01 3]]
-                                                     )))
-  (is (= nil (reg.step/get-misclassified [1 0.21 1.31]
-                                         [-1 1]
-                                         [[0.1 -0.9] [3.01 3]]
-                                         )))
-  )
-
-(deftest update-w-test
-  (is (= [2 -0.79 -2.67] (reg.step/update-w [1 0.21 0.33] 1 [-1 -3])))
-  (is (= [1 -0.79 3.33] (reg.step/update-w [2 0.21 0.33] -1 [1 -3])))
   )
 
 (deftest line-outside-test
@@ -109,26 +86,17 @@
   (is (= true (reg.step/line-outside [[-1.1 -1] [-1 1.1]])))
   )
 
-;; this is not a test, actually
 (deftest reg-test
   (let [
         line [[-1 0.34843307003649615] [1 1.9429805981704393]]
-        points [[-0.4855611243127945 -0.7666774445881908]
-                [-0.37618070384831104 -0.8997041076731649]
-                [0.6562998659034687 -0.011240559143512074]
-                [0.7630545553687544 -0.45373263005814524]
-                [0.8186682345709249 -0.47598280906682655]
-                [-0.38335037355545865 -0.38137643987710845]
-                [0.46756972608225356 0.9827115899665597]
-                [0.3745667278252942 -0.8720781000939429]
-                [0.1876235444072898 0.9160007479127457]
-                [0.6606382312174957 -0.7996944466429889]]
+        points [[-48 -76]
+                [-37 -89]
+                [65 -1]
+                [6 -79]]
         ys (reg.step/calc-y line points)
-        _ (is (= ys [1 1 1 1 1 1 1 1 1 1]))
-        init-w [0 0 0]
-        act (reg.step/reg init-w ys points)
-        _ (reg.step/plot-one-square line points [] "reg-test-2")
+        _ (is (= ys [1 1 1 1]))
+        act (reg.step/reg ys points)
         ]
-    (println "reg-test, act" act)
-    )
-  )
+    (is (= act [0.01100025047260729 -0.015819429436061582]))
+    ))
+

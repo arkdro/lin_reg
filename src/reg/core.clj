@@ -35,7 +35,8 @@
               ["-c" "--cnt" "Count of experiments"
                :parse-fn #(Integer. %)
                :default 1]
-              ["-n" "--n" "N" :parse-fn #(Integer. %)])
+              ["-n" "--n" "N of points" :parse-fn #(Integer. %)
+               :default 10])
         [options _ _] opts
         res (call-calc (:n options)
                        (:cnt options)

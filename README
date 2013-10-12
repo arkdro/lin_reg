@@ -4,7 +4,7 @@ linear regression
 
 ## Usage
 
-FIXME: write
+lein run -n 10 -c 1
 
 ## License
 

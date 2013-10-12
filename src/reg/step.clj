@@ -181,35 +181,18 @@
         pos (map second pos-merged)]
     [neg pos]))
 
-(defn is-misclassified [[w0 w1 w2 :as w]
-                        [y
-                         [x1 x2 :as point]]]
-  (if (= w [0 0 0]) true
-      (let [p (calc-one-y2 w point)]
-        (not (= p y)))))
+;; calc pseudo-inverse of a matrix: (X^t * X)^-1 * X^t
+(defn pseudo-inverse [x]
+  (let [xt (incanter.core/trans x)
+        prod (incanter.core/mmult xt x)]
+    (incanter.core/solve prod xt)))
 
-(defn get-misclassified [w ys points]
-  (let [merged (map list ys points)
-        mis-all (filter #(is-misclassified w %) merged)]
-    (first (shuffle mis-all))))
-
-(defn update-w [[w0 w1 w2]
-                y
-                [x1 x2]]
-  [(+ w0 (* y 1))
-   (+ w1 (* y x1))
-   (+ w2 (* y x2))])
-
-(defn reg-aux [i w ys points]
-  (let [[mis-y mis-point :as mis] (get-misclassified w ys points)
-        _ (reg.misc/log-val "reg-aux" "i" i "w" w "mis" mis)
-        ]
-    (if (nil? mis) [i w]
-        (let [new-w (update-w w mis-y mis-point)]
-          (recur (inc i) new-w ys points)))))
-
-(defn reg [w ys points]
-  (reg-aux 0 w ys points))
+(defn reg [ys points]
+  (let [matrix (incanter.core/matrix points)
+        dagger (pseudo-inverse matrix)
+        y-m (incanter.core/matrix ys)
+        w (incanter.core/mmult dagger y-m)]
+    (incanter.core/to-vect w)))
 
 (defn line-outside [line]
   (let [points [[-1 -1]
@@ -241,15 +224,14 @@
         points (gen-points n)
         ys (calc-y line points)
         [neg-points pos-points] (split-points ys points)
-        init-w [0 0 0]
-        [res-iters [wr0 wr1 wr2 :as res-w] :as reg-res] (reg init-w ys points)
-        _ (reg.misc/log-val "reg res" reg-res)
+        [wr0 wr1 wr2 :as res-w] (reg ys points)
+        _ (reg.misc/log-val "res-w" res-w)
         res-line (normalize wr1 wr2 wr0)
         _ (plot-one-res-square pic line neg-points pos-points base res-line)
         diff-p (calc-diff-prob line res-line)
         _ (reg.misc/log-val "diff p" diff-p)
         ]
-    [res-iters diff-p]
+    diff-p
     )
   )
 
@@ -260,12 +242,10 @@
                 [_ (range cnt)]
               (calc-one-step n pic base))
         _ (reg.misc/log-val "all step res" res)
-        sum-iters (reduce + (map first res))
-        sum-probs (reduce + (map second res))
-        avg-iters (float (/ sum-iters cnt))
+        sum-probs (reduce + res)
         avg-probs (float (/ sum-probs cnt))
         ]
-    [avg-iters avg-probs]
+    avg-probs
     )
   )
 

@@ -285,6 +285,17 @@
         points (gen-points n)]
     (e-aux orig-line res-line points)))
 
+(defn log-zero-w [[w0 w1 w2] line ys points]
+  (cond
+    (not (= w1 0.0)) nil
+    (not (= w2 0.0)) nil
+    :default (println "kx and ky are zero"
+                      "\nline:" line
+                      "\nys" ys
+                      "\npoints" points)
+    )
+  )
+
 (defn calc-one-step-aux [n pic base]
   (let [line (mk-line)
         points (gen-points n)
@@ -292,6 +303,7 @@
         [neg-points pos-points] (split-points ys points)
         [wr0 wr1 wr2 :as res-w] (reg ys points)
         _ (reg.misc/log-val "res-w" res-w)
+        _ (log-zero-w res-w line ys points)
         res-line (normalize wr1 wr2 wr0)
         base-reg (apply str [base "-reg"])
         _ (plot-one-res-square pic line neg-points pos-points base-reg res-line)

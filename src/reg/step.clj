@@ -133,6 +133,9 @@
 ;; each other
 (defn normalize [kx ky c]
   (cond
+    (and (= kx 0.0) (= ky 0.0)) (assert false "both kx and ky are zero")
+    (= kx 0.0) (normalize-by-x kx ky c)
+    (= ky 0.0) (normalize-by-y kx ky c)
     (< (reg.misc/abs kx) (reg.misc/abs ky)) (normalize-by-x kx ky c)
     :default (normalize-by-y kx ky c)))
 

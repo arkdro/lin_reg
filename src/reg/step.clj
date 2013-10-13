@@ -132,9 +132,9 @@
 ;; given line coefficients, return two points located far enough from
 ;; each other
 (defn normalize [kx ky c]
-  (if (< (reg.misc/abs kx) (reg.misc/abs ky))
-    (normalize-by-x kx ky c)
-    (normalize-by-y kx ky c)))
+  (cond
+    (< (reg.misc/abs kx) (reg.misc/abs ky)) (normalize-by-x kx ky c)
+    :default (normalize-by-y kx ky c)))
 
 (defn mk-norm-line []
   (let [line (mk-any-line)

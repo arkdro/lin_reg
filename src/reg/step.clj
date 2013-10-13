@@ -187,7 +187,7 @@
         prod (incanter.core/mmult xt x)]
     (incanter.core/solve prod xt)))
 
-(defn reg-aux [ys points]
+(defn reg-pure [ys points]
   (let [b-points (map #(cons 1 %) points)
         matrix (incanter.core/matrix b-points)
         dagger (pseudo-inverse matrix)
@@ -195,10 +195,17 @@
         w (incanter.core/mmult dagger y-m)]
     (incanter.core/to-vect w)))
 
-(defn reg [ys points]
-  (let [[_w0 w1 w2 :as w] (reg-aux ys points)]
-    (if (and (= w1 0) (= w2 0)) (reg-aux ys points) ;; repeat once
+(defn reg-aux [i ys points]
+  (let [_ (if (> i 0) (reg.misc/log-val "reg-aux, i" i))
+        _ (if (> i 10) (reg.misc/log-val "reg-aux, i" i "ys" "points" points))
+        [_w0 w1 w2 :as w] (reg-pure ys points)]
+    (if (and (= w1 0.0)
+             (= w2 0.0)
+             (< i 11)) (recur (inc i) ys points)
         w)))
+
+(defn reg [ys points]
+  (reg-aux 0 ys points))
 
 (defn line-outside [line]
   (let [points [[-1 -1]

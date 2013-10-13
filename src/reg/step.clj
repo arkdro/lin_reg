@@ -207,6 +207,36 @@
 (defn reg [ys points]
   (reg-aux 0 ys points))
 
+(defn is-misclassified [[w0 w1 w2 :as w]
+                        [y
+                         [x1 x2 :as point]]]
+  (if (= w [0 0 0]) true
+      (let [p (calc-one-y2 w point)]
+        (not (= p y)))))
+
+(defn get-misclassified [w ys points]
+  (let [merged (map list ys points)
+        mis-all (filter #(is-misclassified w %) merged)]
+    (first (shuffle mis-all))))
+
+(defn update-w [[w0 w1 w2]
+                y
+                [x1 x2]]
+  [(+ w0 (* y 1))
+   (+ w1 (* y x1))
+   (+ w2 (* y x2))])
+
+(defn pla-aux [i w ys points]
+  (let [[mis-y mis-point :as mis] (get-misclassified w ys points)
+        _ (reg.misc/log-val "pla-aux" "i" i "w" w "mis" mis)
+        ]
+    (if (nil? mis) [i w]
+        (let [new-w (update-w w mis-y mis-point)]
+          (recur (inc i) new-w ys points)))))
+
+(defn pla [w ys points]
+  (pla-aux 0 w ys points))
+
 (defn line-outside [line]
   (let [points [[-1 -1]
                 [-1 1]
@@ -260,15 +290,23 @@
         [wr0 wr1 wr2 :as res-w] (reg ys points)
         _ (reg.misc/log-val "res-w" res-w)
         res-line (normalize wr1 wr2 wr0)
-        _ (plot-one-res-square pic line neg-points pos-points base res-line)
+        base-reg (apply str [base "-reg"])
+        _ (plot-one-res-square pic line neg-points pos-points base-reg res-line)
         ein (e-in line res-line points)
         _ (reg.misc/log-val "e-in" ein)
         eout (e-out line res-line n)
         _ (reg.misc/log-val "e-out" eout)
         diff-p (calc-diff-prob line res-line)
         _ (reg.misc/log-val "diff p" diff-p)
+        [pla-iters [wp0 wp1 wp2] :as pla-res] (pla res-w ys points)
+        _ (reg.misc/log-val "pla res" pla-res)
+        res-line-pla (normalize wp1 wp2 wp0)
+        base-pla (apply str [base "-pla"])
+        _ (plot-one-res-square pic line neg-points pos-points
+                               base-pla
+                               res-line-pla)
         ]
-    [ein eout diff-p]
+    [ein eout diff-p pla-iters]
     )
   )
 
@@ -285,11 +323,13 @@
         sum-e-in (reduce + (map first res))
         sum-e-out (reduce + (map second res))
         sum-probs (reduce + (map #(get % 2) res))
+        sum-iters (reduce + (map #(get % 3) res))
         avg-e-in (float (/ sum-e-in cnt))
         avg-e-out (float (/ sum-e-out cnt))
         avg-probs (float (/ sum-probs cnt))
+        avg-iters (float (/ sum-iters cnt))
         ]
-    [avg-e-in avg-e-out avg-probs]
+    [avg-e-in avg-e-out avg-probs avg-iters]
     )
   )
 

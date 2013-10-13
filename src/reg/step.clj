@@ -240,6 +240,11 @@
 (defn e-in [orig-line res-line points]
   (e-aux orig-line res-line points))
 
+(defn e-out [orig-line res-line n0]
+  (let [n (* n0 10)
+        points (gen-points n)]
+    (e-aux orig-line res-line points)))
+
 (defn calc-one-step-aux [n pic base]
   (let [line (mk-line)
         points (gen-points n)
@@ -251,10 +256,12 @@
         _ (plot-one-res-square pic line neg-points pos-points base res-line)
         ein (e-in line res-line points)
         _ (reg.misc/log-val "e-in" ein)
+        eout (e-out line res-line n)
+        _ (reg.misc/log-val "e-out" eout)
         diff-p (calc-diff-prob line res-line)
         _ (reg.misc/log-val "diff p" diff-p)
         ]
-    [ein diff-p]
+    [ein eout diff-p]
     )
   )
 
@@ -269,11 +276,13 @@
               (calc-one-step n pic base i))
         _ (reg.misc/log-val "all step res" res)
         sum-e-in (reduce + (map first res))
-        sum-probs (reduce + (map second res))
+        sum-e-out (reduce + (map second res))
+        sum-probs (reduce + (map #(get % 2) res))
         avg-e-in (float (/ sum-e-in cnt))
+        avg-e-out (float (/ sum-e-out cnt))
         avg-probs (float (/ sum-probs cnt))
         ]
-    [avg-e-in avg-probs]
+    [avg-e-in avg-e-out avg-probs]
     )
   )
 

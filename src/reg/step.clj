@@ -188,7 +188,8 @@
     (incanter.core/solve prod xt)))
 
 (defn reg [ys points]
-  (let [matrix (incanter.core/matrix points)
+  (let [b-points (map #(cons 1 %) points)
+        matrix (incanter.core/matrix b-points)
         dagger (pseudo-inverse matrix)
         y-m (incanter.core/matrix ys)
         w (incanter.core/mmult dagger y-m)]

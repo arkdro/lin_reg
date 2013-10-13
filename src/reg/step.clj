@@ -187,13 +187,18 @@
         prod (incanter.core/mmult xt x)]
     (incanter.core/solve prod xt)))
 
-(defn reg [ys points]
+(defn reg-aux [ys points]
   (let [b-points (map #(cons 1 %) points)
         matrix (incanter.core/matrix b-points)
         dagger (pseudo-inverse matrix)
         y-m (incanter.core/matrix ys)
         w (incanter.core/mmult dagger y-m)]
     (incanter.core/to-vect w)))
+
+(defn reg [ys points]
+  (let [[_w0 w1 w2 :as w] (reg-aux ys points)]
+    (if (and (= w1 0) (= w2 0)) (reg-aux ys points) ;; repeat once
+        w)))
 
 (defn line-outside [line]
   (let [points [[-1 -1]

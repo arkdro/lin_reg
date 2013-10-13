@@ -220,6 +220,18 @@
             delta (calc-diff-prob-aux n 0 line res-line)]
         (float (/ delta n)))))
 
+(defn mismatched-y [[y0 y1]]
+  (not (= y0 y1)))
+
+(defn e-in [orig-line res-line points]
+  (let [ys0 (calc-y orig-line points)
+        ys1 (calc-y res-line points)
+        joined (map #(vec [%1 %2]) ys0 ys1)
+        mismatched (filter mismatched-y joined)
+        n (count mismatched)
+        total (count points)]
+    (float (/ n total))))
+
 (defn calc-one-step-aux [n pic base]
   (let [line (mk-line)
         points (gen-points n)
@@ -229,10 +241,12 @@
         _ (reg.misc/log-val "res-w" res-w)
         res-line (normalize wr1 wr2 wr0)
         _ (plot-one-res-square pic line neg-points pos-points base res-line)
+        ein (e-in line res-line points)
+        _ (reg.misc/log-val "e-in" ein)
         diff-p (calc-diff-prob line res-line)
         _ (reg.misc/log-val "diff p" diff-p)
         ]
-    diff-p
+    [ein diff-p]
     )
   )
 
@@ -246,10 +260,12 @@
         res (for [i (range cnt)]
               (calc-one-step n pic base i))
         _ (reg.misc/log-val "all step res" res)
-        sum-probs (reduce + res)
+        sum-e-in (reduce + (map first res))
+        sum-probs (reduce + (map second res))
+        avg-e-in (float (/ sum-e-in cnt))
         avg-probs (float (/ sum-probs cnt))
         ]
-    avg-probs
+    [avg-e-in avg-probs]
     )
   )
 

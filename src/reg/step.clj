@@ -220,7 +220,7 @@
             delta (calc-diff-prob-aux n 0 line res-line)]
         (float (/ delta n)))))
 
-(defn calc-one-step [n pic base]
+(defn calc-one-step-aux [n pic base]
   (let [line (mk-line)
         points (gen-points n)
         ys (calc-y line points)
@@ -236,12 +236,15 @@
     )
   )
 
+(defn calc-one-step [n pic base0 i]
+  (let [base (apply str [base0 "-" i])]
+    (calc-one-step-aux n pic base)))
+
 (defn calc [n cnt pic]
   (let [base (int (rand 1000))
         _ (reg.misc/log-val "n" n "cnt" cnt "base" base)
-        res (for
-                [_ (range cnt)]
-              (calc-one-step n pic base))
+        res (for [i (range cnt)]
+              (calc-one-step n pic base i))
         _ (reg.misc/log-val "all step res" res)
         sum-probs (reduce + res)
         avg-probs (float (/ sum-probs cnt))

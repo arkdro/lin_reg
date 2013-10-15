@@ -177,6 +177,9 @@
 (defn calc-y [line points]
   (map #(calc-one-y line %) points))
 
+(defn calc-y2 [w points]
+  (map #(calc-one-y2 w %) points))
+
 (defn split-points [ys points]
   (let [merged (map list ys points)
         {neg-merged false, pos-merged true} (group-by #(pos? (first %)) merged)
@@ -285,8 +288,26 @@
         points (gen-points n)]
     (e-aux orig-line res-line points)))
 
+(defn e-in2 [orig-line w points]
+  (let [ys0 (calc-y orig-line points)
+        ys1 (calc-y2 w points)
+        diffs (map #(/ (reg.misc/abs (- %1 %2)) 2) ys0 ys1)
+        n (reduce + diffs)
+        total (count points)]
+    (float (/ n total))))
+
+(defn log-small-w [[w0 w1 w2] ein]
+  (cond
+    (< (reg.misc/abs w1) 1e-6) (println "too small w1" w1 "e-in" ein)
+    (< (reg.misc/abs w2) 1e-6) (println "too small w2" w2 "e-in" ein)
+    :default nil
+    )
+  )
+
 (defn log-zero-w [[w0 w1 w2] line ys points]
   (cond
+    (< (reg.misc/abs w1) 1e-6) (println "too small w1" w1)
+    (< (reg.misc/abs w2) 1e-6) (println "too small w2" w2)
     (not (= w1 0.0)) nil
     (not (= w2 0.0)) nil
     :default (println "kx and ky are zero"
@@ -309,6 +330,9 @@
         _ (plot-one-res-square pic line neg-points pos-points base-reg res-line)
         ein (e-in line res-line points)
         _ (reg.misc/log-val "e-in" ein)
+        _ (log-small-w res-w ein)
+        ein2 (e-in2 line res-w points)
+        _ (reg.misc/log-val "e-in2" ein2)
         eout (e-out line res-line n)
         _ (reg.misc/log-val "e-out" eout)
         diff-p (calc-diff-prob line res-line)
@@ -321,7 +345,7 @@
                                base-pla
                                res-line-pla)
         ]
-    [ein eout diff-p pla-iters]
+    [ein eout diff-p pla-iters ein2]
     )
   )
 
@@ -339,12 +363,14 @@
         sum-e-out (reduce + (map second res))
         sum-probs (reduce + (map #(get % 2) res))
         sum-iters (reduce + (map #(get % 3) res))
+        sum-e-in2 (reduce + (map #(get % 4) res))
         avg-e-in (float (/ sum-e-in cnt))
+        avg-e-in2 (float (/ sum-e-in2 cnt))
         avg-e-out (float (/ sum-e-out cnt))
         avg-probs (float (/ sum-probs cnt))
         avg-iters (float (/ sum-iters cnt))
         ]
-    [avg-e-in avg-e-out avg-probs avg-iters]
+    [avg-e-in avg-e-out avg-probs avg-iters avg-e-in2]
     )
   )
 
